@@ -1,3 +1,3 @@
-mkdir -p build; cd build
-cmake ..; make
-cd -; cp build/clox clox
+cmake -B build
+cmake --build build
+cp build/clox clox
