@@ -15,4 +15,6 @@ jobs:
     - uses: actions/checkout@v3
     - name: 01_Chunks_of_Bytecode
       run: make 01
+    - name: 02_A_Virtual_Machine
+      run: make 02
 
