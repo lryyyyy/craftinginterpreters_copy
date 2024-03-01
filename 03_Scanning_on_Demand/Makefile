@@ -2,7 +2,7 @@ build:
 	./run.sh
 
 launch:
-	@ ./clox
+	@ ./clox test.lox
 
 clean:
 	@ rm -rf ./build ./clox

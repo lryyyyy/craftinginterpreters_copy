@@ -71,8 +71,7 @@ static InterpretResult Run() {
 #undef BINARY_OP
 }
 
-InterpretResult Interpret(Chunk *chunk) {
-  vm.chunk = chunk;
-  vm.ip = vm.chunk->code;
-  return Run();
+InterpretResult Interpret(const char *source) {
+  Compile(source);
+  return INTERPRET_OK;
 }
