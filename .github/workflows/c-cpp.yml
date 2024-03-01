@@ -17,4 +17,6 @@ jobs:
       run: make 01
     - name: 02_A_Virtual_Machine
       run: make 02
+    - name: 03_Scanning_on_Demand
+      run: make 03
 
