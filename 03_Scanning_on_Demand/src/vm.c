@@ -1,6 +1,7 @@
 #include "vm.h"
 #include "common.h"
 #include "debug.h"
+#include "compiler.h"
 
 VM vm;
 
