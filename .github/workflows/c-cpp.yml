@@ -19,4 +19,6 @@ jobs:
       run: make 02
     - name: 03_Scanning_on_Demand
       run: make 03
+    - name: 04_Compiling_Expressions
+      run: make 04
 
