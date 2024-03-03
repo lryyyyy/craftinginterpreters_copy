@@ -15,7 +15,9 @@ static int SimpleInstruction(const char *name, int offset) {
 
 static int ConstantInstruction(const char *name, Chunk *chunk, int offset) {
   uint8_t constant = chunk->code[offset + 1];
-  printf("%-16s %4d '%g'\n", name, constant, chunk->constants.values[constant]);
+  printf("%-16s %4d '", name, constant);
+  PrintValue(chunk->constants.values[constant]);
+  printf("'\n");
   return offset + 2;
 }
 
@@ -31,6 +33,18 @@ int DisassembleInstruction(Chunk *chunk, int offset) {
   switch (instruction) {
   case OP_CONSTANT:
     return ConstantInstruction("OP_CONSTANT", chunk, offset);
+  case OP_NULL:
+    return SimpleInstruction("OP_NULL", offset);
+  case OP_TRUE:
+    return SimpleInstruction("OP_TRUE", offset);
+  case OP_FALSE:
+    return SimpleInstruction("OP_FALSE", offset);
+  case OP_EQUAL:
+    return SimpleInstruction("OP_EQUAL", offset);
+  case OP_GREATER:
+    return SimpleInstruction("OP_GREATER", offset);
+  case OP_LESS:
+    return SimpleInstruction("OP_LESS", offset);
   case OP_ADD:
     return SimpleInstruction("OP_ADD", offset);
   case OP_SUBTRACT:
@@ -39,6 +53,8 @@ int DisassembleInstruction(Chunk *chunk, int offset) {
     return SimpleInstruction("OP_MULTIPLY", offset);
   case OP_DIVIDE:
     return SimpleInstruction("OP_DIVIDE", offset);
+  case OP_NOT:
+    return SimpleInstruction("OP_NOT", offset);
   case OP_NEGATE:
     return SimpleInstruction("OP_NEGATE", offset);
   case OP_RETURN:

@@ -36,6 +36,7 @@ static void Grouping();
 static void Unary();
 static void Binary();
 static void Number();
+static void Literal();
 static void ParsePrecedence();
 
 ParseRule rules[] = {
@@ -50,31 +51,31 @@ ParseRule rules[] = {
     [TOKEN_SEMICOLON] = {NULL, NULL, PREC_NONE},
     [TOKEN_SLASH] = {NULL, Binary, PREC_FACTOR},
     [TOKEN_STAR] = {NULL, Binary, PREC_FACTOR},
-    [TOKEN_BANG] = {NULL, NULL, PREC_NONE},
-    [TOKEN_BANG_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_BANG] = {Unary, NULL, PREC_NONE},
+    [TOKEN_BANG_EQUAL] = {NULL, Binary, PREC_EQUALITY},
     [TOKEN_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_EQUAL_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_GREATER_EQUAL] = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS] = {NULL, NULL, PREC_NONE},
-    [TOKEN_LESS_EQUAL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_EQUAL_EQUAL] = {NULL, Binary, PREC_EQUALITY},
+    [TOKEN_GREATER] = {NULL, Binary, PREC_COMPARISON},
+    [TOKEN_GREATER_EQUAL] = {NULL, Binary, PREC_COMPARISON},
+    [TOKEN_LESS] = {NULL, Binary, PREC_COMPARISON},
+    [TOKEN_LESS_EQUAL] = {NULL, Binary, PREC_COMPARISON},
     [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
     [TOKEN_STRING] = {NULL, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {Number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
-    [TOKEN_FALSE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_FALSE] = {Literal, NULL, PREC_NONE},
     [TOKEN_FOR] = {NULL, NULL, PREC_NONE},
     [TOKEN_FUN] = {NULL, NULL, PREC_NONE},
     [TOKEN_IF] = {NULL, NULL, PREC_NONE},
-    [TOKEN_NIL] = {NULL, NULL, PREC_NONE},
+    [TOKEN_NULL] = {Literal, NULL, PREC_NONE},
     [TOKEN_OR] = {NULL, NULL, PREC_NONE},
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
     [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
     [TOKEN_THIS] = {NULL, NULL, PREC_NONE},
-    [TOKEN_TRUE] = {NULL, NULL, PREC_NONE},
+    [TOKEN_TRUE] = {Literal, NULL, PREC_NONE},
     [TOKEN_VAR] = {NULL, NULL, PREC_NONE},
     [TOKEN_WHILE] = {NULL, NULL, PREC_NONE},
     [TOKEN_ERROR] = {NULL, NULL, PREC_NONE},
@@ -171,9 +172,25 @@ static void EmitConstant(Value value) {
   EmitBytes(OP_CONSTANT, MakeConstant(value));
 }
 
+static void Literal() {
+  switch (parser.previous.type) {
+  case TOKEN_FALSE:
+    EmitByte(OP_FALSE);
+    break;
+  case TOKEN_NULL:
+    EmitByte(OP_NULL);
+    break;
+  case TOKEN_TRUE:
+    EmitByte(OP_TRUE);
+    break;
+  default:
+    return;
+  }
+}
+
 static void Number() {
   double value = strtod(parser.previous.start, NULL);
-  EmitConstant(value);
+  EmitConstant(NUMBER_VAL(value));
 }
 
 static void Unary() {
@@ -182,6 +199,9 @@ static void Unary() {
   switch (operator_type) {
   case TOKEN_MINUS:
     EmitByte(OP_NEGATE);
+    break;
+  case TOKEN_BANG:
+    EmitByte(OP_NOT);
     break;
   default:
     return;
@@ -194,6 +214,24 @@ static void Binary() {
   ParsePrecedence((Precedence)(rule->precedence + 1));
 
   switch (operator_type) {
+  case TOKEN_BANG_EQUAL:
+    EmitBytes(OP_EQUAL, OP_NOT);
+    break;
+  case TOKEN_EQUAL_EQUAL:
+    EmitByte(OP_EQUAL);
+    break;
+  case TOKEN_GREATER:
+    EmitByte(OP_GREATER);
+    break;
+  case TOKEN_GREATER_EQUAL:
+    EmitBytes(OP_LESS, OP_NOT);
+    break;
+  case TOKEN_LESS:
+    EmitByte(OP_LESS);
+    break;
+  case TOKEN_LESS_EQUAL:
+    EmitBytes(OP_GREATER, OP_NOT);
+    break;
   case TOKEN_PLUS:
     EmitByte(OP_ADD);
     break;
