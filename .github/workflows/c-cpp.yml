@@ -21,4 +21,6 @@ jobs:
       run: make 03
     - name: 04_Compiling_Expressions
       run: make 04
+    - name: 05_Types_of_Values
+      run: make 05
 
