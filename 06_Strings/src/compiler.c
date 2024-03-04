@@ -1,7 +1,9 @@
 #include "compiler.h"
 #include "common.h"
 #include "debug.h"
+#include "object.h"
 #include "scanner.h"
+#include "value.h"
 
 typedef struct {
   Token current;
@@ -36,6 +38,7 @@ static void Grouping();
 static void Unary();
 static void Binary();
 static void Number();
+static void String();
 static void Literal();
 static void ParsePrecedence();
 
@@ -60,7 +63,7 @@ ParseRule rules[] = {
     [TOKEN_LESS] = {NULL, Binary, PREC_COMPARISON},
     [TOKEN_LESS_EQUAL] = {NULL, Binary, PREC_COMPARISON},
     [TOKEN_IDENTIFIER] = {NULL, NULL, PREC_NONE},
-    [TOKEN_STRING] = {NULL, NULL, PREC_NONE},
+    [TOKEN_STRING] = {String, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {Number, NULL, PREC_NONE},
     [TOKEN_AND] = {NULL, NULL, PREC_NONE},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
@@ -193,6 +196,10 @@ static void Number() {
   EmitConstant(NUMBER_VAL(value));
 }
 
+static void String() {
+  EmitConstant(OBJ_VAL(
+      CopyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
 static void Unary() {
   TokenType operator_type = parser.previous.type;
   ParsePrecedence(PREC_UNARY);
