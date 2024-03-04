@@ -23,4 +23,6 @@ jobs:
       run: make 04
     - name: 05_Types_of_Values
       run: make 05
+    - name: 06_Strings
+      run: make 06
 
