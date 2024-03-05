@@ -1,5 +1,6 @@
 #include "object.h"
 #include "memory.h"
+#include "table.h"
 #include "value.h"
 #include "vm.h"
 
@@ -14,22 +15,44 @@ static Object *AllocateObject(size_t size, ObjType type) {
   return object;
 }
 
-static ObjString *AllocateString(char *chars, int length) {
+static ObjString *AllocateString(char *chars, int length, uint32_t hash) {
   ObjString *string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
   string->length = length;
   string->chars = chars;
+  string->hash = hash;
+  TableSet(&vm.strings, string, NULL_VAL);
   return string;
 }
 
+static uint32_t HashString(const char *key, int length) {
+  uint32_t hash = 2166136261u;
+  for (int i = 0; i < length; i++) {
+    hash ^= (uint8_t)key[i];
+    hash *= 16777619;
+  }
+  return hash;
+}
+
 ObjString *GetString(char *chars, int length) {
-  return AllocateString(chars, length);
+  uint32_t hash = HashString(chars, length);
+  ObjString *interned = TableFindString(&vm.strings, chars, length, hash);
+  if (interned != NULL) {
+    FREE_ARRAY(char, chars, length + 1);
+    return interned;
+  }
+  return AllocateString(chars, length, hash);
 }
 
 ObjString *CopyString(const char *chars, int length) {
+  uint32_t hash = HashString(chars, length);
+  ObjString *interned = TableFindString(&vm.strings, chars, length, hash);
+  if (interned != NULL) {
+    return interned;
+  }
   char *heap_chars = ALLOCATE(char, length + 1);
   memcpy(heap_chars, chars, length);
   heap_chars[length] = '\0';
-  return AllocateString(heap_chars, length);
+  return AllocateString(heap_chars, length, hash);
 }
 
 void PrintObject(Value value) {
