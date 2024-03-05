@@ -25,4 +25,6 @@ jobs:
       run: make 05
     - name: 06_Strings
       run: make 06
+    - name: 07_Hash_Tables
+      run: make 07
 

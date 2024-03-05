@@ -23,6 +23,10 @@
 	@ make -C 06_Strings
 	@ make -C 06_Strings launch
 
+07:
+	@ make -C 07_Hash_Tables
+	@ make -C 07_Hash_Tables launch
+
 clean:
 	@ make -C 01_Chunks_of_Bytecode clean
 	@ make -C 02_A_Virtual_Machine clean
@@ -30,5 +34,6 @@ clean:
 	@ make -C 04_Compiling_Expressions clean
 	@ make -C 05_Types_of_Values clean
 	@ make -C 06_Strings clean
+	@ make -C 07_Hash_Tables clean
 
-.PHONY: 01 02 03 04 05 06 clean
+.PHONY: 01 02 03 04 05 06 07 clean
