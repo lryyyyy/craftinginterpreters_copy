@@ -137,6 +137,16 @@ static void Consume(TokenType type, const char *message) {
   ErrorAtCurrent(message);
 }
 
+static bool Check(TokenType type) { return parser.current.type == type; }
+
+static bool Match(TokenType type) {
+  if (!Check(type)) {
+    return false;
+  }
+  Advance();
+  return true;
+}
+
 static void EmitByte(uint8_t byte) {
   WriteChunk(CurrentChunk(), byte, parser.previous.line);
 }
@@ -156,6 +166,20 @@ static void EndCompiler() {
 }
 
 static void Expression() { ParsePrecedence(PREC_ASSIGNMENT); }
+
+static void PrintStatement() {
+  Expression();
+  Consume(TOKEN_SEMICOLON, "Expect ';' after value.");
+  EmitByte(OP_PRINT);
+}
+
+static void Statement() {
+  if (Match(TOKEN_PRINT)) {
+    PrintStatement();
+  }
+}
+
+static void Declaration() { Statement(); }
 
 static void Grouping() {
   Expression();
@@ -277,8 +301,9 @@ bool Compile(const char *source, Chunk *chunk) {
   compiling_chunk = chunk;
   InitScanner(source);
   Advance();
-  Expression();
-  Consume(TOKEN_EOF, "Expect end of expression.");
+  while (!Match(TOKEN_EOF)) {
+    Declaration();
+  }
   EndCompiler();
   return !parser.had_error;
 }

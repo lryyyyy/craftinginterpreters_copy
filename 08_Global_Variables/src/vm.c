@@ -153,10 +153,13 @@ static InterpretResult Run() {
       Push(NUMBER_VAL(-AS_NUMBER(Pop())));
       break;
     }
-    case OP_RETURN: {
+    case OP_PRINT: {
       Value result = Pop();
       PrintValue(result);
       printf("\n");
+      break;
+    }
+    case OP_RETURN: {
       return INTERPRET_OK;
     }
     }
