@@ -1,3 +1,4 @@
 var first_name = "liu";
-var name = first_name + "ruiyang";
+var last_name = "ruiyang";
+var name = first_name + last_name;
 print name;
