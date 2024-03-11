@@ -1,1 +1,3 @@
-print 1 + 2 * 3 + 4 * 5;
+var first_name = "liu";
+var name = first_name + "ruiyang";
+print name;

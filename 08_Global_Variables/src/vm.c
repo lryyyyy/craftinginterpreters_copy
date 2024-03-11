@@ -27,10 +27,12 @@ void InitVM() {
   ResetStack();
   vm.objects = NULL;
   InitTable(&vm.strings);
+  InitTable(&vm.globals);
 }
 
 void FreeVM() {
   FreeTable(&vm.strings);
+  FreeTable(&vm.globals);
   FreeObjects();
 }
 
@@ -67,6 +69,7 @@ static void Concatenate() {
 static InterpretResult Run() {
 #define READ_BYTE() (*vm.ip++)
 #define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+#define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(type, op)                                                    \
   do {                                                                         \
     if (!IS_NUMBER(Peek(0)) || !IS_NUMBER(Peek(1))) {                          \
@@ -96,6 +99,26 @@ static InterpretResult Run() {
     }
     case OP_FALSE: {
       Push(BOOL_VAL(false));
+      break;
+    }
+    case OP_POP: {
+      Pop();
+      break;
+    }
+    case OP_DEFINE_GLOBAL: {
+      ObjString *name = READ_STRING();
+      TableSet(&vm.globals, name, Peek(0));
+      Pop();
+      break;
+    }
+    case OP_GET_GLOBAL: {
+      ObjString *name = READ_STRING();
+      Value value;
+      if (!TableGet(&vm.globals, name, &value)) {
+        RuntimeError("Undefined variable '%s'.", name->chars);
+        return INTERPRET_RUNTIME_ERROR;
+      }
+      Push(value);
       break;
     }
     case OP_EQUAL: {
@@ -167,6 +190,7 @@ static InterpretResult Run() {
 
 #undef READ_BYTE
 #undef READ_CONSTANT
+#undef READ_STRING
 #undef BINARY_OP
 }
 
