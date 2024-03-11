@@ -27,6 +27,10 @@
 	@ make -C 07_Hash_Tables
 	@ make -C 07_Hash_Tables launch
 
+08:
+	@ make -C 08_Global_Variables
+	@ make -C 08_Global_Variables launch
+
 clean:
 	@ make -C 01_Chunks_of_Bytecode clean
 	@ make -C 02_A_Virtual_Machine clean
@@ -35,5 +39,6 @@ clean:
 	@ make -C 05_Types_of_Values clean
 	@ make -C 06_Strings clean
 	@ make -C 07_Hash_Tables clean
+	@ make -C 08_Global_Variables clean
 
-.PHONY: 01 02 03 04 05 06 07 clean
+.PHONY: 01 02 03 04 05 06 07 08 clean

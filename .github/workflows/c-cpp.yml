@@ -27,4 +27,6 @@ jobs:
       run: make 06
     - name: 07_Hash_Tables
       run: make 07
+    - name: 08_Global_Variables
+      run: make 08
 
