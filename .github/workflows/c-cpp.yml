@@ -29,4 +29,5 @@ jobs:
       run: make 07
     - name: 08_Global_Variables
       run: make 08
-
+    - name: 09_Local_Variables
+      run: make 09
