@@ -130,6 +130,16 @@ static InterpretResult Run() {
       }
       break;
     }
+    case OP_GET_LOCAL: {
+      uint8_t slot = READ_BYTE();
+      Push(vm.stack[slot]);
+      break;
+    }
+    case OP_SET_LOCAL: {
+      uint8_t slot = READ_BYTE();
+      vm.stack[slot] = Peek(0);
+      break;
+    }
     case OP_EQUAL: {
       Value b = Pop();
       Value a = Pop();
