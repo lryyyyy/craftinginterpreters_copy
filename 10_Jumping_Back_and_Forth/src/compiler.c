@@ -54,6 +54,7 @@ static void Binary(bool can_assign);
 static void Variable(bool can_assign);
 static void ParsePrecedence(Precedence precedence);
 static void Declaration();
+static void Statement();
 
 ParseRule rules[] = {
     [TOKEN_LEFT_PAREN] = {Grouping, NULL, PREC_NONE},
@@ -239,9 +240,44 @@ static void EndScope() {
   }
 }
 
+static int EmitJump(uint8_t instruction) {
+  EmitByte(instruction);
+  EmitByte(0xff);
+  EmitByte(0xff);
+  return CurrentChunk()->count - 2;
+}
+
+static void PatchJump(int offset) {
+  // -2 to adjust for the bytecode for the jump offset itself.
+  int jump = CurrentChunk()->count - offset - 2;
+  if (jump > UINT16_MAX) {
+    error("Too much code to jump over.");
+  }
+  CurrentChunk()->code[offset] = (jump >> 8) & 0xff;
+  CurrentChunk()->code[offset + 1] = jump & 0xff;
+}
+
+static void IfStatement() {
+  Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'if'.");
+  Expression();
+  Consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+  int then_jump = EmitJump(OP_JUMP_IF_FALSE);
+  EmitByte(OP_POP);
+  Statement();
+  int else_jump = EmitJump(OP_JUMP);
+  PatchJump(then_jump);
+  EmitByte(OP_POP);
+  if (Match(TOKEN_ELSE)) {
+    Statement();
+  }
+  PatchJump(else_jump);
+}
+
 static void Statement() {
   if (Match(TOKEN_PRINT)) {
     PrintStatement();
+  } else if (Match(TOKEN_IF)) {
+    IfStatement();
   } else if (Match(TOKEN_LEFT_BRACE)) {
     BeginScope();
     Block();

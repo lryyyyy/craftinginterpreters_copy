@@ -1,0 +1,7 @@
+var a = 2;
+var b = 1;
+if (a == b) {
+    print("equal");
+} else {
+    print("not equal");
+}
