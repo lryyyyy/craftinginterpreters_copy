@@ -35,6 +35,10 @@
 	@ make -C 09_Local_Variables
 	@ make -C 09_Local_Variables launch
 
+10:
+	@ make -C 10_Jumping_Back_and_Forth
+	@ make -C 10_Jumping_Back_and_Forth launch
+
 clean:
 	@ make -C 01_Chunks_of_Bytecode clean
 	@ make -C 02_A_Virtual_Machine clean
@@ -45,5 +49,6 @@ clean:
 	@ make -C 07_Hash_Tables clean
 	@ make -C 08_Global_Variables clean
 	@ make -C 09_Local_Variables clean
+	@ make -C 10_Jumping_Back_and_Forth clean
 
-.PHONY: 01 02 03 04 05 06 07 08 09 clean
+.PHONY: 01 02 03 04 05 06 07 08 09 10 clean

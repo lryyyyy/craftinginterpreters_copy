@@ -31,3 +31,5 @@ jobs:
       run: make 08
     - name: 09_Local_Variables
       run: make 09
+    - name: 10_Jumping_Back_and_Forth
+      run: make 10

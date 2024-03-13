@@ -1,0 +1,7 @@
+var name = "nullptr";
+{
+    var first_name = "liu";
+    var last_name = "ruiyang";
+    name = first_name + last_name;
+}
+print name;
