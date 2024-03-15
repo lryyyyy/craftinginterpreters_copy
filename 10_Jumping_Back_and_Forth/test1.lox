@@ -1,7 +1,5 @@
-var name = "nullptr";
-{
-    var first_name = "liu";
-    var last_name = "ruiyang";
-    name = first_name + last_name;
+if (true and false) {
+    print("hello world!");
+} else {
+    print("bye bye!");
 }
-print name;

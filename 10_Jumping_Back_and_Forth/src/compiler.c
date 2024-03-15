@@ -52,6 +52,8 @@ static void String(bool can_assign);
 static void Literal(bool can_assign);
 static void Binary(bool can_assign);
 static void Variable(bool can_assign);
+static void And_(bool can_assign);
+static void Or_(bool can_assign);
 static void ParsePrecedence(Precedence precedence);
 static void Declaration();
 static void Statement();
@@ -79,7 +81,7 @@ ParseRule rules[] = {
     [TOKEN_IDENTIFIER] = {Variable, NULL, PREC_NONE},
     [TOKEN_STRING] = {String, NULL, PREC_NONE},
     [TOKEN_NUMBER] = {Number, NULL, PREC_NONE},
-    [TOKEN_AND] = {NULL, NULL, PREC_NONE},
+    [TOKEN_AND] = {NULL, And_, PREC_AND},
     [TOKEN_CLASS] = {NULL, NULL, PREC_NONE},
     [TOKEN_ELSE] = {NULL, NULL, PREC_NONE},
     [TOKEN_FALSE] = {Literal, NULL, PREC_NONE},
@@ -87,7 +89,7 @@ ParseRule rules[] = {
     [TOKEN_FUN] = {NULL, NULL, PREC_NONE},
     [TOKEN_IF] = {NULL, NULL, PREC_NONE},
     [TOKEN_NULL] = {Literal, NULL, PREC_NONE},
-    [TOKEN_OR] = {NULL, NULL, PREC_NONE},
+    [TOKEN_OR] = {NULL, Or_, PREC_OR},
     [TOKEN_PRINT] = {NULL, NULL, PREC_NONE},
     [TOKEN_RETURN] = {NULL, NULL, PREC_NONE},
     [TOKEN_SUPER] = {NULL, NULL, PREC_NONE},
@@ -273,11 +275,36 @@ static void IfStatement() {
   PatchJump(else_jump);
 }
 
+static void EmitLoop(int loop_start) {
+  EmitByte(OP_LOOP);
+  int offset = CurrentChunk()->count - loop_start + 2;
+  if (offset > UINT16_MAX) {
+    Error("Loop body too large.");
+  }
+  EmitByte((offset >> 8) & 0xff);
+  EmitByte(offset & 0xff);
+}
+
+static void WhileStatement() {
+  int loop_start = CurrentChunk()->count;
+  Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'while'.");
+  Expression();
+  Consume(TOKEN_RIGHT_PAREN, "Expect ')' after condition.");
+  int exit_jump = EmitJump(OP_JUMP_IF_FALSE);
+  EmitByte(OP_POP);
+  Statement();
+  EmitLoop(loop_start);
+  PatchJump(exit_jump);
+  EmitByte(OP_POP);
+}
+
 static void Statement() {
   if (Match(TOKEN_PRINT)) {
     PrintStatement();
   } else if (Match(TOKEN_IF)) {
     IfStatement();
+  } else if (Match(TOKEN_WHILE)) {
+    WhileStatement();
   } else if (Match(TOKEN_LEFT_BRACE)) {
     BeginScope();
     Block();
@@ -441,6 +468,22 @@ static void NamedVariable(Token name, bool can_assign) {
   } else {
     EmitBytes(get_op, (uint8_t)arg);
   }
+}
+
+static void And_(bool can_assign) {
+  int end_jump = EmitJump(OP_JUMP_IF_FALSE);
+  EmitByte(OP_POP);
+  ParsePrecedence(PREC_AND);
+  PatchJump(end_jump);
+}
+
+static void Or_(bool can_assign) {
+  int else_jump = EmitJump(OP_JUMP_IF_FALSE);
+  int end_jump = EmitJump(OP_JUMP);
+  PatchJump(else_jump);
+  EmitByte(OP_POP);
+  ParsePrecedence(PREC_OR);
+  PatchJump(end_jump);
 }
 
 static void Variable(bool can_assign) {
