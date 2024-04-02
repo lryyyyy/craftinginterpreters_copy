@@ -56,6 +56,7 @@ static void And_(bool can_assign);
 static void Or_(bool can_assign);
 static void ParsePrecedence(Precedence precedence);
 static void Declaration();
+static void VarDeclaration();
 static void Statement();
 
 ParseRule rules[] = {
@@ -253,7 +254,7 @@ static void PatchJump(int offset) {
   // -2 to adjust for the bytecode for the jump offset itself.
   int jump = CurrentChunk()->count - offset - 2;
   if (jump > UINT16_MAX) {
-    error("Too much code to jump over.");
+    Error("Too much code to jump over.");
   }
   CurrentChunk()->code[offset] = (jump >> 8) & 0xff;
   CurrentChunk()->code[offset + 1] = jump & 0xff;
@@ -298,6 +299,43 @@ static void WhileStatement() {
   EmitByte(OP_POP);
 }
 
+static void ForStatement() {
+  BeginScope();
+  Consume(TOKEN_LEFT_PAREN, "Expect '(' after 'for'.");
+  if (Match(TOKEN_SEMICOLON)) {
+    // No initializer.
+  } else if (Match(TOKEN_VAR)) {
+    VarDeclaration();
+  } else {
+    ExpressionStatement();
+  }
+  int loop_start = CurrentChunk()->count;
+  int exit_jump = -1;
+  if (!Match(TOKEN_SEMICOLON)) {
+    Expression();
+    Consume(TOKEN_SEMICOLON, "Expect ';' after loop condition.");
+    exit_jump = EmitJump(OP_JUMP_IF_FALSE);
+    EmitByte(OP_POP);
+  }
+  if (!Match(TOKEN_RIGHT_PAREN)) {
+    int body_jump = EmitJump(OP_JUMP);
+    int increment_start = CurrentChunk()->count;
+    Expression();
+    EmitByte(OP_POP);
+    Consume(TOKEN_RIGHT_PAREN, "Expect ')' after for clauses.");
+    EmitLoop(loop_start);
+    loop_start = increment_start;
+    PatchJump(body_jump);
+  }
+  Statement();
+  EmitLoop(loop_start);
+  if (exit_jump != -1) {
+    PatchJump(exit_jump);
+    EmitByte(OP_POP);
+  }
+  EndScope();
+}
+
 static void Statement() {
   if (Match(TOKEN_PRINT)) {
     PrintStatement();
@@ -305,6 +343,8 @@ static void Statement() {
     IfStatement();
   } else if (Match(TOKEN_WHILE)) {
     WhileStatement();
+  } else if (Match(TOKEN_FOR)) {
+    ForStatement();
   } else if (Match(TOKEN_LEFT_BRACE)) {
     BeginScope();
     Block();
