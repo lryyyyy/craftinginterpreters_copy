@@ -33,3 +33,5 @@ jobs:
       run: make 09
     - name: 10_Jumping_Back_and_Forth
       run: make 10
+    - name: 11_Calls_and_Functions
+      run: make 11

@@ -39,6 +39,10 @@
 	@ make -C 10_Jumping_Back_and_Forth
 	@ make -C 10_Jumping_Back_and_Forth launch
 
+11:
+	@ make -C 11_Calls_and_Functions
+	@ make -C 11_Calls_and_Functions launch
+
 clean:
 	@ make -C 01_Chunks_of_Bytecode clean
 	@ make -C 02_A_Virtual_Machine clean
@@ -50,5 +54,6 @@ clean:
 	@ make -C 08_Global_Variables clean
 	@ make -C 09_Local_Variables clean
 	@ make -C 10_Jumping_Back_and_Forth clean
+	@ make -C 11_Calls_and_Functions clean
 
-.PHONY: 01 02 03 04 05 06 07 08 09 10 clean
+.PHONY: 01 02 03 04 05 06 07 08 09 10 11 clean
