@@ -2,9 +2,7 @@ build:
 	./run.sh
 
 launch:
-	@ ./clox ifelse.lox
-	@ ./clox while.lox
-	@ ./clox for.lox
+	@ ./clox func.lox
 
 clean:
 	@ rm -rf ./build ./clox

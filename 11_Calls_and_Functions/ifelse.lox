@@ -1,5 +1,0 @@
-if (true and false) {
-    print("hello world!");
-} else {
-    print("bye bye!");
-}
