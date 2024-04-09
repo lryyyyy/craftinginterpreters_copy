@@ -17,7 +17,14 @@ typedef struct {
   int depth;
 } Local;
 
+typedef enum {
+  TYPE_FUNCTION,
+  TYPE_SCRIPT,
+} FunctionType;
+
 typedef struct {
+  ObjFunction *function;
+  FunctionType type;
   Local locals[UINT8_COUNT];
   int local_count;
   int scope_depth;
@@ -108,13 +115,20 @@ Parser parser;
 Compiler *current = NULL;
 Chunk *compiling_chunk;
 
-static void InitCompiler(Compiler *compiler) {
+static void InitCompiler(Compiler *compiler, FunctionType type) {
+  compiler->function = NULL;
+  compiler->type = type;
   compiler->local_count = 0;
   compiler->scope_depth = 0;
+  compiler->function = NewFunction();
   current = compiler;
+  Local *local = &current->locals[current->local_count++];
+  local->depth = 0;
+  local->name.start = "";
+  local->name.length = 0;
 }
 
-static Chunk *CurrentChunk() { return compiling_chunk; }
+static Chunk *CurrentChunk() { return &current->function->chunk; }
 
 static void ErrorAt(Token *token, const char *message) {
   if (parser.panic_mode)
@@ -182,11 +196,15 @@ static void EmitBytes(uint8_t byte1, uint8_t byte2) {
 
 static void EmitReturn() { EmitByte(OP_RETURN); }
 
-static void EndCompiler() {
+static ObjFunction *EndCompiler() {
   EmitReturn();
+  ObjFunction *function = current->function;
   if (!parser.had_error) {
-    DisassembleChunk(CurrentChunk(), "code");
+    DisassembleChunk(CurrentChunk(), function->name != NULL
+                                         ? function->name->chars
+                                         : "<script>");
   }
+  return function;
 }
 
 static void Expression() { ParsePrecedence(PREC_ASSIGNMENT); }
@@ -605,17 +623,16 @@ static void ParsePrecedence(Precedence precedence) {
   }
 }
 
-bool Compile(const char *source, Chunk *chunk) {
+ObjFunction *Compile(const char *source) {
   parser.had_error = false;
   parser.panic_mode = false;
-  compiling_chunk = chunk;
   InitScanner(source);
   Compiler compiler;
-  InitCompiler(&compiler);
+  InitCompiler(&compiler, TYPE_SCRIPT);
   Advance();
   while (!Match(TOKEN_EOF)) {
     Declaration();
   }
-  EndCompiler();
-  return !parser.had_error;
+  ObjFunction* function = EndCompiler();
+  return parser.had_error ? NULL : function;
 }
