@@ -35,3 +35,5 @@ jobs:
       run: make 10
     - name: 11_Calls_and_Functions
       run: make 11
+    - name: 12_Closures
+      run: make 12
