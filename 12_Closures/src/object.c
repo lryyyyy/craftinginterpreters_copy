@@ -18,9 +18,23 @@ static Object *AllocateObject(size_t size, ObjType type) {
 ObjFunction *NewFunction() {
   ObjFunction *function = ALLOCATE_OBJ(ObjFunction, OBJ_FUNCTION);
   function->arity = 0;
+  function->upvalue_count = 0;
   function->name = NULL;
   InitChunk(&function->chunk);
   return function;
+}
+
+ObjClosure *NewClosure(ObjFunction *function) {
+  ObjUpvalue **upvalues = ALLOCATE(ObjUpvalue *,
+                                   function->upvalue_count);
+  for (int i = 0; i < function->upvalue_count; i++) {
+    upvalues[i] = NULL;
+  }
+  ObjClosure *closure = ALLOCATE_OBJ(ObjClosure, OBJ_CLOSURE);
+  closure->function = function;
+  closure->upvalues = upvalues;
+  closure->upvalue_count = function->upvalue_count;
+  return closure;
 }
 
 ObjNative *NewNative(NativeFn function) {
@@ -69,6 +83,14 @@ ObjString *CopyString(const char *chars, int length) {
   return AllocateString(heap_chars, length, hash);
 }
 
+ObjUpvalue *NewUpvalue(Value *slot) {
+  ObjUpvalue *upvalue = ALLOCATE_OBJ(ObjUpvalue, OBJ_UPVALUE);
+  upvalue->closed = NULL_VAL;
+  upvalue->location = slot;
+  upvalue->next = NULL;
+  return upvalue;
+}
+
 static void PrintFunction(ObjFunction *function) {
   if (function->name == NULL) {
     printf("<script>");
@@ -82,8 +104,14 @@ void PrintObject(Value value) {
   case OBJ_STRING:
     printf("%s", AS_CSTRING(value));
     break;
+  case OBJ_UPVALUE:
+    printf("upvalue");
+    break;
   case OBJ_FUNCTION:
     PrintFunction(AS_FUNCTION(value));
+    break;
+  case OBJ_CLOSURE:
+    PrintFunction(AS_CLOSURE(value)->function);
     break;
   case OBJ_NATIVE:
     printf("<native fn>");
